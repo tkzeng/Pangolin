@@ -1,0 +1,64 @@
+##fileformat=VCFv4.2
+##fileDate=20191004
+##reference=GRCh37/hg19
+##contig=<ID=chr1,length=249250621>
+##contig=<ID=chr2,length=243199373>
+##contig=<ID=chr3,length=198022430>
+##contig=<ID=chr4,length=191154276>
+##contig=<ID=chr5,length=180915260>
+##contig=<ID=chr6,length=171115067>
+##contig=<ID=chr7,length=159138663>
+##contig=<ID=chr8,length=146364022>
+##contig=<ID=chr9,length=141213431>
+##contig=<ID=chr10,length=135534747>
+##contig=<ID=chr11,length=135006516>
+##contig=<ID=chr12,length=133851895>
+##contig=<ID=chr13,length=115169878>
+##contig=<ID=chr14,length=107349540>
+##contig=<ID=chr15,length=102531392>
+##contig=<ID=chr16,length=90354753>
+##contig=<ID=chr17,length=81195210>
+##contig=<ID=chr18,length=78077248>
+##contig=<ID=chr19,length=59128983>
+##contig=<ID=chr20,length=63025520>
+##contig=<ID=chr21,length=48129895>
+##contig=<ID=chr22,length=51304566>
+##contig=<ID=chrX,length=155270560>
+##contig=<ID=chrY,length=59373566>
+##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr17	41276135	.	T	G	.	.	.
+chr17	41276135	.	T	C	.	.	.
+chr17	41276135	.	T	A	.	.	.
+chr17	41276134	.	T	G	.	.	.
+chr17	41276134	.	T	C	.	.	.
+chr17	41276134	.	T	A	.	.	.
+chr17	41276133	.	C	T	.	.	.
+chr17	41276133	.	C	G	.	.	.
+chr17	41276133	.	C	A	.	.	.
+chr17	41276132	.	A	T	.	.	.
+chr17	41276132	.	A	G	.	.	.
+chr17	41276132	.	A	C	.	.	.
+chr17	41276131	.	A	T	.	.	.
+chr17	41276131	.	A	G	.	.	.
+chr17	41276131	.	A	C	.	.	.
+chr17	41276130	.	G	T	.	.	.
+chr17	41276130	.	G	C	.	.	.
+chr17	41276130	.	G	A	.	.	.
+chr17	41276129	.	T	G	.	.	.
+chr17	41276129	.	T	C	.	.	.
+chr17	41276129	.	T	A	.	.	.
+chr17	41276128	.	A	T	.	.	.
+chr17	41276128	.	A	C	.	.	.
+chr17	41276127	.	A	T	.	.	.
+chr17	41276127	.	A	G	.	.	.
+chr17	41276127	.	A	C	.	.	.
+chr17	41276126	.	C	T	.	.	.
+chr17	41276126	.	C	G	.	.	.
+chr17	41276126	.	C	A	.	.	.
+chr17	41276125	.	C	T	.	.	.
+chr17	41276125	.	C	G	.	.	.
+chr17	41276125	.	C	A	.	.	.
+chr17	41276124	.	T	G	.	.	.
+chr17	41276124	.	T	C	.	.	.
+chr17	41276124	.	T	A	.	.	.
