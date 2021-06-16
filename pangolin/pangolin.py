@@ -101,7 +101,8 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
         seq = fasta[chr][pos-5001-d:pos+len(ref)+4999+d].seq
     except Exception as e:
         print(e)
-        print("[Line %s]" % lnum, "WARNING, skipping variant: See error message above.")
+        print("[Line %s]" % lnum, "WARNING, skipping variant: Could not get sequence, possibly because the variant is too close to chromosome ends. "
+                                  "See error message above.")
         return -1    
 
     if seq[5000+d:5000+d+len(ref)] != ref:
@@ -161,8 +162,8 @@ def main():
     parser.add_argument("output_file", help="Prefix for output file. Will be a VCF/CSV if variant_file is VCF/CSV.")
     parser.add_argument("-c", "--column_ids", default="CHROM,POS,REF,ALT", help="(If variant_file is a CSV) Column IDs for: chromosome, variant position, reference bases, and alternative bases. "
                                                                                 "Separate IDs by commas. (Default: CHROM,POS,REF,ALT)")
-    parser.add_argument("-m", "--mask", default="False", choices=["False","True"], help="If True, splice gains at annotated splice sites and splice losses at unannotated splice sites will be set to 0.")
-    parser.add_argument("-s", "--score_cutoff", type=float, help="Output all sites with absolute predicted change in score >=cutoff, instead of only the maximum loss/gain sites.")
+    parser.add_argument("-m", "--mask", default="False", choices=["False","True"], help="If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice sites will be set to 0.")
+    parser.add_argument("-s", "--score_cutoff", type=float, help="Output all sites with absolute predicted change in score >= cutoff, instead of only the maximum loss/gain sites.")
     parser.add_argument("-d", "--distance", type=int, default=50, help="Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)")
     args = parser.parse_args()
 
@@ -173,6 +174,11 @@ def main():
     except:
         print("ERROR, annotation_file could not be opened. Is it a gffutils database file?")
         exit()
+
+    if torch.cuda.is_available():
+        print("Using GPU")
+    else:
+        print("Using CPU")
 
     models = []
     for i in [0,2,6]:
