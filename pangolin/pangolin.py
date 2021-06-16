@@ -4,7 +4,7 @@ from pangolin.model import *
 import vcf
 import gffutils
 import pandas as pd
-from pyfaidx import Fasta
+import pyfastx
 # import time
 # startTime = time.time()
 
@@ -90,7 +90,7 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
         print("[Line %s]" % lnum, "WARNING, skipping variant: Deletion too large")
         return -1
 
-    fasta = Fasta(args.reference_file)
+    fasta = pyfastx.Fasta(args.reference_file)
     # try to make vcf chromosomes compatible with reference chromosomes
     if chr not in fasta.keys() and "chr"+chr in fasta.keys():
         chr = "chr"+chr
