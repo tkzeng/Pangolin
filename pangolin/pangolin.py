@@ -2,7 +2,6 @@ import argparse
 from pkg_resources import resource_filename
 from pangolin.model import *
 import vcf
-import pybedtools
 import gffutils
 import pandas as pd
 from pyfaidx import Fasta
@@ -38,9 +37,9 @@ def compute_score(ref_seq, alt_seq, strand, d, models):
         alt_seq = alt_seq.to(torch.device("cuda"))
 
     pangolin = []
-    for j in range(1):
+    for j in range(3):
         score = []
-        for model in models[5*j:5*j+1]:
+        for model in models[5*j:5*j+5]:
             with torch.no_grad():
                 ref = model(ref_seq)[0][[1,4,10][j],:].cpu().numpy()
                 alt = model(alt_seq)[0][[1,4,10][j],:].cpu().numpy()
@@ -91,21 +90,19 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
         print("[Line %s]" % lnum, "WARNING, skipping variant: Deletion too large")
         return -1
 
-    index = Fasta(args.reference_file)
+    fasta = Fasta(args.reference_file)
     # try to make vcf chromosomes compatible with reference chromosomes
-    if chr not in index.keys() and "chr"+chr in index.keys():
+    if chr not in fasta.keys() and "chr"+chr in fasta.keys():
         chr = "chr"+chr
-    elif chr not in index.keys() and chr[3:] in index.keys():
+    elif chr not in fasta.keys() and chr[3:] in fasta.keys():
         chr = chr[3:]
 
-    bed = pybedtools.BedTool("""%s %s %s""" % (chr, pos-5001-d, pos+len(ref)+4999+d), from_string=True)
     try:
-        seq = bed.sequence(fi=args.reference_file)
-        seq = open(seq.seqfn).read().split('\n')[1]
+        seq = fasta[chr][pos-5001-d:pos+len(ref)+4999+d].seq
     except Exception as e:
         print(e)
         print("[Line %s]" % lnum, "WARNING, skipping variant: See error message above.")
-        return -1
+        return -1    
 
     if seq[5000+d:5000+d+len(ref)] != ref:
         print("[Line %s]" % lnum, "WARNING, skipping variant: Mismatch between FASTA (ref base: %s) and variant file (ref base: %s)."
@@ -146,11 +143,13 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
 
             if cutoff != None:
                 l, g = np.where(loss<=-cutoff)[0], np.where(gain>=cutoff)[0]
-                scores = "|".join([str(round(_,2)) for _ in np.concatenate([gain[g],loss[l]])]
-                                  +[str(_) for _ in np.concatenate([g-d,l-d])])
+                scores = gene
+                for p, s in zip(np.concatenate([g-d,l-d]), np.concatenate([gain[g],loss[l]])):
+                    scores = "%s|%s:%s" % (scores, p, round(s,2))
+                    
             else:
                 l, g = np.argmin(loss), np.argmax(gain),
-                scores = scores+"%s|%s|%s|%s|%s|" % (gene, round(gain[g],2), round(loss[l],2), g-d, l-d)
+                scores = scores+"%s|%s:%s|%s:%s" % (gene, g-d, round(gain[g],2), l-d, round(loss[l],2))
 
     return scores.strip('|')
 
@@ -199,7 +198,7 @@ def main():
         variants = vcf.Reader(filename=variants)
         variants.infos["Pangolin"] = vcf.parser._Info(
             "Pangolin",'.',"String","Pangolin splice scores. "
-            "Format: gene|gain_1|...|gain_n|loss_1|...|loss_n|gain_1_pos|...|gain_n_pos|loss_1_pos|...|loss_n_pos",'.','.')
+            "Format: gene|pos:score_change|pos:score_change|...",'.','.')
         fout = vcf.Writer(open(args.output_file+".vcf", 'w'), variants)
 
         for i, variant in enumerate(variants):
