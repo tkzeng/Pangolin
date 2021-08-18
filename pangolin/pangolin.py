@@ -37,12 +37,12 @@ def compute_score(ref_seq, alt_seq, strand, d, models):
         alt_seq = alt_seq.to(torch.device("cuda"))
 
     pangolin = []
-    for j in range(3):
+    for j in range(8):
         score = []
-        for model in models[5*j:5*j+5]:
+        for model in models[2*j:2*j+2]:
             with torch.no_grad():
-                ref = model(ref_seq)[0][[1,4,10][j],:].cpu().numpy()
-                alt = model(alt_seq)[0][[1,4,10][j],:].cpu().numpy()
+                ref = model(ref_seq)[0][[1,2,4,5,7,8,10,11][j],:].cpu().numpy()
+                alt = model(alt_seq)[0][[1,2,4,5,7,8,10,11][j],:].cpu().numpy()
                 if strand == '-':
                     ref = ref[::-1]
                     alt = alt[::-1]
@@ -53,7 +53,7 @@ def compute_score(ref_seq, alt_seq, strand, d, models):
                 score.append(alt-ref)
         pangolin.append(np.mean(score, axis=0))
 
-    pangolin = np.array(pangolin)
+    pangolin = np.array([pangolin[0]+pangolin[1],pangolin[2]+pangolin[3],pangolin[4]+pangolin[5],pangolin[6]+pangolin[7]])/2
     loss = pangolin[np.argmin(pangolin, axis=0), np.arange(pangolin.shape[1])]
     gain = pangolin[np.argmax(pangolin, axis=0), np.arange(pangolin.shape[1])]
     return loss, gain
@@ -83,7 +83,7 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
     cutoff = args.score_cutoff
 
     if len(set("ACGT").intersection(set(ref))) == 0 or len(set("ACGT").intersection(set(alt))) == 0 \
-            or (len(ref) != 1 and len(alt) != 1):
+            or (len(ref) != 1 and len(alt) != 1 and len(ref) != len(alt)):
         print("[Line %s]" % lnum, "WARNING, skipping variant: Variant format not supported.")
         return -1
     elif len(ref) > 2*d:
@@ -146,11 +146,11 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 l, g = np.where(loss<=-cutoff)[0], np.where(gain>=cutoff)[0]
                 scores = gene
                 for p, s in zip(np.concatenate([g-d,l-d]), np.concatenate([gain[g],loss[l]])):
-                    scores = "%s|%s:%s" % (scores, p, round(s,2))
+                    scores = "%s|%s:%s|" % (scores, p, round(s,2))
                     
             else:
                 l, g = np.argmin(loss), np.argmax(gain),
-                scores = scores+"%s|%s:%s|%s:%s" % (gene, g-d, round(gain[g],2), l-d, round(loss[l],2))
+                scores = scores+"%s|%s:%s|%s:%s|" % (gene, g-d, round(gain[g],2), l-d, round(loss[l],2))
 
     return scores.strip('|')
 
@@ -181,14 +181,14 @@ def main():
         print("Using CPU")
 
     models = []
-    for i in [0,2,6]:
-        for j in range(1,6):
+    for i in range(8):
+        for j in range(1,3):
             model = Pangolin(L, W, AR)
             if torch.cuda.is_available():
                 model.cuda()
-                weights = torch.load(resource_filename(__name__,"models/final.%s.%s.3" % (j, i)))
+                weights = torch.load(resource_filename(__name__,"models/final.%s.%s.3.v2" % (j, i)))
             else:
-                weights = torch.load(resource_filename(__name__,"models/final.%s.%s.3" % (j, i)), map_location=torch.device('cpu'))
+                weights = torch.load(resource_filename(__name__,"models/final.%s.%s.3.v2" % (j, i)), map_location=torch.device('cpu'))
             model.load_state_dict(weights)
             model.eval()
             models.append(model)
