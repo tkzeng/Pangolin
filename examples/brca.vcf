@@ -27,6 +27,7 @@
 ##contig=<ID=chrY,length=59373566>
 ##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr17   41276135        .       TTAA       GTCT       .       .       .
 chr17	41276135	.	T	G	.	.	.
 chr17	41276135	.	T	C	.	.	.
 chr17	41276135	.	T	A	.	.	.

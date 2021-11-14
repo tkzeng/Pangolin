@@ -23,15 +23,15 @@ See below for information on usage and local installation.
 
 ### Usage (command-line)
 
-1. Create an annotation database from a GTF file using `scripts/create_db.py`. This will take several minutes. Example usage:
+1. Create an annotation database from a GTF file using `scripts/create_db.py`. This will take several minutes. By default, it looks for the Ensembl_canonical tag to identify a primary transcript for each gene. Example usage:
    ```
-   python scripts/create_db.py gencode.v38lift37.basic.annotation.gtf.gz
-   # output: gencode.v38lift37.basic.annotation.db
+   python scripts/create_db.py gencode.v38lift37.annotation.gtf.gz
+   # output: gencode.v38lift37.annotation.db
    ```
 
    Annotation databases for GENCODE Release 38 (released 5/5/21) can be downloaded from: https://www.dropbox.com/sh/6zo0aegoalvgd9f/AADWN_cGIWpvVN9BYJ37vGmZa?dl=0
-   * `gencode.v38.basic.annotation.db`: GENCODE basic gene annotations, GRCh38
-   * `gencode.v38lift37.basic.annotation.db`: GENCODE basic gene annotations, lifted to GRCh37
+   * `gencode.v38.annotation.Ensembl_canonical.db`: GENCODE gene annotations, Ensembl canonical transcripts, GRCh38
+   * `gencode.v38lift37.annotation.Ensembl_canonical.db`: GENCODE gene annotations, Ensembl canonical transcripts, lifted to GRCh37
 
 2. Run Pangolin on a VCF or CSV file containing a list of variants. Under default settings, the maximum increase and decrease in score within 50 bases of the variant, along with their positions, will be reported. Format in the output file: `gene|pos:largest_increase|pos:largest_decrease|` 
    * Only substitutions and simple insertions/deletions (either the REF or ALT field is a single base) are currently supported.
@@ -39,7 +39,7 @@ See below for information on usage and local installation.
   
     Example usage:
     ```
-    pangolin examples/brca.vcf GRCh37.primary_assembly.genome.fa.gz gencode.v38lift37.basic.annotation.db brca_pangolin
+    pangolin examples/brca.vcf GRCh37.primary_assembly.genome.fa.gz gencode.v38lift37.annotation.Ensembl_canonical.db brca_pangolin
     ```
     See full options below:
     ```
@@ -54,11 +54,9 @@ See below for information on usage and local installation.
     optional arguments:
       -h, --help            show this help message and exit
       -c COLUMN_IDS, --column_ids COLUMN_IDS
-                            (If variant_file is a CSV) Column IDs for: chromosome, variant position, reference bases, and alternative bases. Separate IDs by
-                            commas. (Default: CHROM,POS,REF,ALT)
+                            (If variant_file is a CSV) Column IDs for: chromosome, variant position, reference bases, and alternative bases. Separate IDs by commas. (Default: CHROM,POS,REF,ALT)
       -m {False,True}, --mask {False,True}
-                            If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice
-                            sites will be set to 0.
+                            If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice sites will be set to 0. (Default: True)
       -s SCORE_CUTOFF, --score_cutoff SCORE_CUTOFF
                             Output all sites with absolute predicted change in score >= cutoff, instead of only the maximum loss/gain sites.
       -d DISTANCE, --distance DISTANCE
