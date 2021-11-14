@@ -46,13 +46,15 @@ def compute_score(ref_seq, alt_seq, strand, d, models):
                 if strand == '-':
                     ref = ref[::-1]
                     alt = alt[::-1]
+                l = 2*d+1
+                ndiff = np.abs(len(ref)-len(alt))
                 if len(ref)>len(alt):
-                    alt = np.concatenate([alt[0:d+1],np.zeros(len(ref)-len(alt)),alt[-d:]])
+                    alt = np.concatenate([alt[0:l//2+1],np.zeros(ndiff),alt[l//2+1:]])
                 elif len(ref)<len(alt):
-                    ref = np.concatenate([ref[0:d+1],np.zeros(len(alt)-len(ref)),ref[-d:]])
+                    alt = np.concatenate([alt[0:l//2],np.max(alt[l//2:l//2+ndiff+1], keepdims=True),alt[l//2+ndiff+1:]])
                 score.append(alt-ref)
         pangolin.append(np.mean(score, axis=0))
-
+    
     pangolin = np.array(pangolin)
     loss = pangolin[np.argmin(pangolin, axis=0), np.arange(pangolin.shape[1])]
     gain = pangolin[np.argmax(pangolin, axis=0), np.arange(pangolin.shape[1])]
@@ -70,6 +72,8 @@ def get_genes(chr, pos, gtf):
         exons = []
         for exon in gtf.children(gene, featuretype="exon"):
             exons.extend([exon[3], exon[4]])
+        if len(exons) == 0:
+            continue
         if exon[6] == '+':
             genes_pos[gene] = exons
         elif exon[6] == '-':
@@ -127,14 +131,14 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
     if len(genes_neg) > 0:
         loss_neg, gain_neg = compute_score(ref_seq, alt_seq, '-', d, models)
 
+    print(ref,alt)
+
     scores = ""
     for (genes, loss, gain) in \
             ((genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)):
         for gene, positions in genes.items():
             positions = np.array(positions)
             positions = positions - (pos - d)
-            if len(alt_seq) > len(ref_seq):
-                positions[positions > d] += (len(alt_seq) - len(ref_seq))
 
             if args.mask == "True":
                 positions_filt = positions[(positions>=0) & (positions<len(loss))]
@@ -144,28 +148,27 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 not_positions = ~np.isin(np.arange(len(loss)), positions_filt)
                 loss[not_positions] = np.maximum(loss[not_positions], 0)
 
-            if args.score_exons == "True":
-                scores1 = gene+'_sites1|'
-                scores2 = gene+'_sites2|'
-
-                for i in range(len(positions)//2):
-                    p1, p2 = positions[2*i], positions[2*i+1]
-                    if p1<0 or p1>=len(loss):
-                        s1 = "NA"
-                    else:
-                        s1 = [loss[p1],gain[p1]]
-                        s1 = np.round(s1[np.argmax(np.abs(s1))],2)
-                    if p2<0 or p2>=len(loss):
-                        s2 = "NA"
-                    else:
-                        s2 = [loss[p2],gain[p2]]
-                        s2 = np.round(s2[np.argmax(np.abs(s2))],2)
-                    if s1 == "NA" and s2 == "NA":
-                        continue
-                    scores1 += "%s:%s|" % (p1-d, s1)
-                    scores2 += "%s:%s|" % (p2-d, s2)
-
-                scores = scores+scores1+scores2
+            #if args.score_exons == "True":
+            #    scores1 = gene+'_sites1|'
+            #    scores2 = gene+'_sites2|'
+            #
+            #    for i in range(len(positions)//2):
+            #        p1, p2 = positions[2*i], positions[2*i+1]
+            #        if p1<0 or p1>=len(loss):
+            #            s1 = "NA"
+            #        else:
+            #            s1 = [loss[p1],gain[p1]]
+            #            s1 = round(s1[np.argmax(np.abs(s1))],2)
+            #        if p2<0 or p2>=len(loss):
+            #            s2 = "NA"
+            #        else:
+            #            s2 = [loss[p2],gain[p2]]
+            #            s2 = round(s2[np.argmax(np.abs(s2))],2)
+            #        if s1 == "NA" and s2 == "NA":
+            #            continue
+            #        scores1 += "%s:%s|" % (p1-d, s1)
+            #        scores2 += "%s:%s|" % (p2-d, s2)
+            #    scores = scores+scores1+scores2
 
             elif cutoff != None:
                 scores = scores+gene+'|'
@@ -188,11 +191,10 @@ def main():
     parser.add_argument("output_file", help="Prefix for output file. Will be a VCF/CSV if variant_file is VCF/CSV.")
     parser.add_argument("-c", "--column_ids", default="CHROM,POS,REF,ALT", help="(If variant_file is a CSV) Column IDs for: chromosome, variant position, reference bases, and alternative bases. "
                                                                                 "Separate IDs by commas. (Default: CHROM,POS,REF,ALT)")
-    parser.add_argument("-m", "--mask", default="False", choices=["False","True"], help="If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice sites will be set to 0.")
+    parser.add_argument("-m", "--mask", default="True", choices=["False","True"], help="If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice sites will be set to 0.")
     parser.add_argument("-s", "--score_cutoff", type=float, help="Output all sites with absolute predicted change in score >= cutoff, instead of only the maximum loss/gain sites.")
     parser.add_argument("-d", "--distance", type=int, default=50, help="Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)")
-    parser.add_argument("--score_exons", default="False", choices=["False","True"], help="Output changes in score for both splice sites of annotated exons, as long as one splice site is within the considered range (specified by -d). "
-                                                                                         "Output will be: gene|site1_pos:score|site2_pos:score|...")
+    #parser.add_argument("--score_exons", default="False", choices=["False","True"], help="Output changes in score for both splice sites of annotated exons, as long as one splice site is within the considered range (specified by -d). Output will be: gene|site1_pos:score|site2_pos:score|...")
     args = parser.parse_args()
 
     variants = args.variant_file
