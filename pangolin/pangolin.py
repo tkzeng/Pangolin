@@ -131,8 +131,6 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
     if len(genes_neg) > 0:
         loss_neg, gain_neg = compute_score(ref_seq, alt_seq, '-', d, models)
 
-    print(ref,alt)
-
     scores = ""
     for (genes, loss, gain) in \
             ((genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)):
@@ -170,7 +168,7 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
             #        scores2 += "%s:%s|" % (p2-d, s2)
             #    scores = scores+scores1+scores2
 
-            elif cutoff != None:
+            if cutoff != None:
                 scores = scores+gene+'|'
                 l, g = np.where(loss<=-cutoff)[0], np.where(gain>=cutoff)[0]
                 for p, s in zip(np.concatenate([g-d,l-d]), np.concatenate([gain[g],loss[l]])):
