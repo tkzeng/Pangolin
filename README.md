@@ -30,8 +30,8 @@ See below for information on usage and local installation.
    ```
 
    Annotation databases for GENCODE Release 38 (released 5/5/21) can be downloaded from: https://www.dropbox.com/sh/6zo0aegoalvgd9f/AADWN_cGIWpvVN9BYJ37vGmZa?dl=0
-   * `gencode.v38.annotation.Ensembl_canonical.db`: GENCODE gene annotations, Ensembl canonical transcripts, GRCh38
-   * `gencode.v38lift37.annotation.Ensembl_canonical.db`: GENCODE gene annotations, Ensembl canonical transcripts, lifted to GRCh37
+   * `gencode.v38.annotation.db`: GENCODE gene annotations for GRCh38 for transcripts with the Ensembl_canonical tag
+   * `gencode.v38lift37.annotation.db`: GENCODE gene annotations for GRCh38 (lifted to GRCh37) for transcripts with the Ensembl_canonical, appris_principal, appris_candidate, or appris_candidate_longest tags
 
 2. Run Pangolin on a VCF or CSV file containing a list of variants. Under default settings, the maximum increase and decrease in score within 50 bases of the variant, along with their positions, will be reported. Format in the output file: `gene|pos:largest_increase|pos:largest_decrease|` 
    * Only substitutions and simple insertions/deletions (either the REF or ALT field is a single base) are currently supported.
