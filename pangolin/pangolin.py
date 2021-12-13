@@ -68,16 +68,14 @@ def get_genes(chr, pos, gtf):
     for gene in genes:
         if gene[3] > pos or gene[4] < pos:
             continue
-        gene = gene["gene_id"][0]
+        gene_id = gene["gene_id"][0]
         exons = []
         for exon in gtf.children(gene, featuretype="exon"):
             exons.extend([exon[3], exon[4]])
-        if len(exons) == 0:
-            continue
-        if exon[6] == '+':
-            genes_pos[gene] = exons
-        elif exon[6] == '-':
-            genes_neg[gene] = exons
+        if gene[6] == '+':
+            genes_pos[gene_id] = exons
+        elif gene[6] == '-':
+            genes_neg[gene_id] = exons
 
     return (genes_pos, genes_neg)
 
@@ -135,10 +133,12 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
     for (genes, loss, gain) in \
             ((genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)):
         for gene, positions in genes.items():
-            positions = np.array(positions)
-            positions = positions - (pos - d)
+            warnings = "Warnings:"
 
-            if args.mask == "True":
+            if args.mask == "True" and len(positions) != 0:
+                positions = np.array(positions)
+                positions = positions - (pos - d)
+
                 positions_filt = positions[(positions>=0) & (positions<len(loss))]
                 # set splice gain at annotated sites to 0
                 gain[positions_filt] = np.minimum(gain[positions_filt], 0)
@@ -146,27 +146,9 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 not_positions = ~np.isin(np.arange(len(loss)), positions_filt)
                 loss[not_positions] = np.maximum(loss[not_positions], 0)
 
-            #if args.score_exons == "True":
-            #    scores1 = gene+'_sites1|'
-            #    scores2 = gene+'_sites2|'
-            #
-            #    for i in range(len(positions)//2):
-            #        p1, p2 = positions[2*i], positions[2*i+1]
-            #        if p1<0 or p1>=len(loss):
-            #            s1 = "NA"
-            #        else:
-            #            s1 = [loss[p1],gain[p1]]
-            #            s1 = round(s1[np.argmax(np.abs(s1))],2)
-            #        if p2<0 or p2>=len(loss):
-            #            s2 = "NA"
-            #        else:
-            #            s2 = [loss[p2],gain[p2]]
-            #            s2 = round(s2[np.argmax(np.abs(s2))],2)
-            #        if s1 == "NA" and s2 == "NA":
-            #            continue
-            #        scores1 += "%s:%s|" % (p1-d, s1)
-            #        scores2 += "%s:%s|" % (p2-d, s2)
-            #    scores = scores+scores1+scores2
+            elif args.mask == "True":
+                warnings += "NoAnnotatedSitesToMaskForThisGene"
+                loss[:] = np.maximum(loss[:], 0)
 
             if cutoff != None:
                 scores = scores+gene+'|'
@@ -178,6 +160,8 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 scores = scores+gene+'|'
                 l, g = np.argmin(loss), np.argmax(gain),
                 scores += "%s:%s|%s:%s|" % (g-d, round(gain[g],2), l-d, round(loss[l],2))
+
+            scores += warnings
 
     return scores.strip('|')
 
