@@ -1,6 +1,6 @@
 # Pangolin
 
-Pangolin is a deep-learning based method for predicting splice site strengths. It is available as a command-line tool that can be run on a VCF or CSV file containing variants of interest; Pangolin will predict changes in splice site strength due to each variant, and return a file of the same format. Pangolin's models can also be used with custom sequences.
+Pangolin is a deep-learning based method for predicting splice site strengths (for details, see [Zeng and Li, Genome Biology 2022](https://doi.org/10.1186/s13059-022-02664-4)). It is available as a command-line tool that can be run on a VCF or CSV file containing variants of interest; Pangolin will predict changes in splice site strength due to each variant, and return a file of the same format. Pangolin's models can also be used with custom sequences.
 
 Pangolin can be run on Google Colab, which provides free acess to GPUs and other computing resources: https://colab.research.google.com/github/tkzeng/Pangolin/blob/main/PangolinColab.ipynb
 
@@ -66,3 +66,9 @@ See below for information on usage and local installation.
 ### Usage (custom)
 
 See `scripts/custom_usage.py`
+
+### Citation
+
+If you use Pangolin, please cite:
+
+Zeng, T., Li, Y.I. Predicting RNA splicing from DNA sequence using Pangolin. Genome Biol 23, 103 (2022). https://doi.org/10.1186/s13059-022-02664-4
