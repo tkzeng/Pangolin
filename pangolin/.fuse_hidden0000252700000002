@@ -134,8 +134,6 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
             ((genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)):
         for gene, positions in genes.items():
             warnings = "Warnings:"
-            positions = np.array(positions)
-            positions = positions - (pos - d)
 
             if args.mask == "True" and len(positions) != 0:
                 positions = np.array(positions)
@@ -152,29 +150,7 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 warnings += "NoAnnotatedSitesToMaskForThisGene"
                 loss[:] = np.maximum(loss[:], 0)
 
-            if args.score_exons == "True":
-                scores1 = gene+'_sites1|'
-                scores2 = gene+'_sites2|'
-            
-                for i in range(len(positions)//2):
-                    p1, p2 = positions[2*i], positions[2*i+1]
-                    if p1<0 or p1>=len(loss):
-                        s1 = "NA"
-                    else:
-                        s1 = [loss[p1],gain[p1]]
-                        s1 = round(s1[np.argmax(np.abs(s1))],2)
-                    if p2<0 or p2>=len(loss):
-                        s2 = "NA"
-                    else:
-                        s2 = [loss[p2],gain[p2]]
-                        s2 = round(s2[np.argmax(np.abs(s2))],2)
-                    if s1 == "NA" and s2 == "NA":
-                        continue
-                    scores1 += "%s:%s|" % (p1-d, s1)
-                    scores2 += "%s:%s|" % (p2-d, s2)
-                scores = scores+scores1+scores2
-
-            elif cutoff != None:
+            if cutoff != None:
                 scores = scores+gene+'|'
                 l, g = np.where(loss<=-cutoff)[0], np.where(gain>=cutoff)[0]
                 for p, s in zip(np.concatenate([g-d,l-d]), np.concatenate([gain[g],loss[l]])):
@@ -200,7 +176,7 @@ def main():
     parser.add_argument("-m", "--mask", default="True", choices=["False","True"], help="If True, splice gains (increases in score) at annotated splice sites and splice losses (decreases in score) at unannotated splice sites will be set to 0. (Default: True)")
     parser.add_argument("-s", "--score_cutoff", type=float, help="Output all sites with absolute predicted change in score >= cutoff, instead of only the maximum loss/gain sites.")
     parser.add_argument("-d", "--distance", type=int, default=50, help="Number of bases on either side of the variant for which splice scores should be calculated. (Default: 50)")
-    parser.add_argument("--score_exons", default="False", choices=["False","True"], help="Output changes in score for both splice sites of annotated exons, as long as one splice site is within the considered range (specified by -d). Output will be: gene|site1_pos:score|site2_pos:score|...")
+    #parser.add_argument("--score_exons", default="False", choices=["False","True"], help="Output changes in score for both splice sites of annotated exons, as long as one splice site is within the considered range (specified by -d). Output will be: gene|site1_pos:score|site2_pos:score|...")
     args = parser.parse_args()
 
     variants = args.variant_file
