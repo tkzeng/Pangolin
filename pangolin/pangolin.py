@@ -138,9 +138,6 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
             positions = positions - (pos - d)
 
             if args.mask == "True" and len(positions) != 0:
-                positions = np.array(positions)
-                positions = positions - (pos - d)
-
                 positions_filt = positions[(positions>=0) & (positions<len(loss))]
                 # set splice gain at annotated sites to 0
                 gain[positions_filt] = np.minimum(gain[positions_filt], 0)
