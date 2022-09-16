@@ -7,14 +7,15 @@ Pangolin can be run on Google Colab, which provides free acess to GPUs and other
 See below for information on usage and local installation.
 
 ### Installation
-* Prerequisites: Python 3.x and conda, which can both be installed using Miniconda: https://docs.conda.io/en/latest/miniconda.html
-* Install PyTorch: https://pytorch.org/get-started/locally/ 
+* Prerequisites: Python 3.6 or higher and conda, which can both be installed using Miniconda: https://docs.conda.io/en/latest/miniconda.html
+* Install PyTorch: https://pytorch.org/get-started/locally/
   * If a supported GPU is available, installation with GPU support is recommended (choose an option under "Compute Platform")
-* Install other dependencies: 
+* Install other dependencies:
   ```
-  pip install pyvcf gffutils biopython pandas pyfastx
+  conda install -c conda-forge pyvcf
+  pip install gffutils biopython pandas pyfastx
   ```
-* Install Pangolin: 
+* Install Pangolin:
   ```
   git clone https://github.com/tkzeng/Pangolin.git
   cd Pangolin
@@ -31,15 +32,23 @@ See below for information on usage and local installation.
 
    Annotation databases for GENCODE Release 38 (released 5/5/21) can be downloaded from: https://www.dropbox.com/sh/6zo0aegoalvgd9f/AADWN_cGIWpvVN9BYJ37vGmZa?dl=0
    * `gencode.v38.annotation.db`: GENCODE gene annotations for GRCh38 for transcripts with the Ensembl_canonical tag
+      ```
+      # download annotation file
+      wget https://www.dropbox.com/sh/6zo0aegoalvgd9f/AADOhGYJo8tbUhpscp3wSFj6a/gencode.v38.annotation.db
+      ```
    * `gencode.v38lift37.annotation.db`: GENCODE gene annotations for GRCh38 (lifted to GRCh37) for transcripts with the Ensembl_canonical, appris_principal, appris_candidate, or appris_candidate_longest tags
+      ```
+      # download annotation file
+      wget https://www.dropbox.com/sh/6zo0aegoalvgd9f/AAA9Q90Pi1UqSzX99R_NM803a/gencode.v38lift37.annotation.db
+      ```
 
-2. Run Pangolin on a VCF or CSV file containing a list of variants. Under default settings, the maximum increase and decrease in score within 50 bases of the variant, along with their positions, will be reported. Format in the output file: `gene|pos:largest_increase|pos:largest_decrease|` 
+2. Run Pangolin on a VCF or CSV file containing a list of variants. Under default settings, the maximum increase and decrease in score within 50 bases of the variant, along with their positions, will be reported. Format in the output file: `gene|pos:largest_increase|pos:largest_decrease|`
    * Only substitutions and simple insertions/deletions (either the REF or ALT field is a single base) are currently supported.
    * Variants are skipped if: they are not contained in a gene, defined by the annotation file; are within 5000 bases of the chromosome ends; are deletions larger than twice the input parameter -d; or do not match sequences from the reference FASTA file.
-  
+
     Example usage:
     ```
-    pangolin examples/brca.vcf GRCh37.primary_assembly.genome.fa.gz gencode.v38lift37.annotation.Ensembl_canonical.db brca_pangolin
+    pangolin examples/brca.vcf GRCh37.primary_assembly.genome.fa.gz gencode.v38lift37.annotation.db brca_pangolin
     ```
     See full options below:
     ```
