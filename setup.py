@@ -1,4 +1,8 @@
 import setuptools
+from glob import glob
+from os.path import dirname, join
+
+DIR = (dirname(__file__) or '.')
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -19,5 +23,6 @@ setuptools.setup(
         "console_scripts": [
             "pangolin=pangolin.pangolin:main"
         ]
-    }
+    },
+    scripts=glob(join(DIR, 'scripts/*.py')),
 )
