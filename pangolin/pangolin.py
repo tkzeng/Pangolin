@@ -129,10 +129,13 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
     if len(genes_neg) > 0:
         loss_neg, gain_neg = compute_score(ref_seq, alt_seq, '-', d, models)
 
-    scores = ""
-    for (genes, loss, gain) in \
-            ((genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)):
+    scores_list = []
+    for (genes, loss, gain) in (
+        (genes_pos,loss_pos,gain_pos),(genes_neg,loss_neg,gain_neg)
+    ):
+        # Emit a bundle of scores/warnings per gene; join them all later
         for gene, positions in genes.items():
+            per_gene_scores = []
             warnings = "Warnings:"
             positions = np.array(positions)
             positions = positions - (pos - d)
@@ -150,8 +153,8 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                 loss[:] = np.maximum(loss[:], 0)
 
             if args.score_exons == "True":
-                scores1 = gene+'_sites1|'
-                scores2 = gene+'_sites2|'
+                scores1 = [gene + '_sites1']
+                scores2 = [gene + '_sites2']
             
                 for i in range(len(positions)//2):
                     p1, p2 = positions[2*i], positions[2*i+1]
@@ -167,24 +170,27 @@ def process_variant(lnum, chr, pos, ref, alt, gtf, models, args):
                         s2 = round(s2[np.argmax(np.abs(s2))],2)
                     if s1 == "NA" and s2 == "NA":
                         continue
-                    scores1 += "%s:%s|" % (p1-d, s1)
-                    scores2 += "%s:%s|" % (p2-d, s2)
-                scores = scores+scores1+scores2
+                    scores1.append(f"{p1-d}:{s1}")
+                    scores2.append(f"{p2-d}:{s2}")
+                per_gene_scores += scores1 + scores2
 
             elif cutoff != None:
-                scores = scores+gene+'|'
+                per_gene_scores.append(gene)
                 l, g = np.where(loss<=-cutoff)[0], np.where(gain>=cutoff)[0]
                 for p, s in zip(np.concatenate([g-d,l-d]), np.concatenate([gain[g],loss[l]])):
-                    scores += "%s:%s|" % (p, round(s,2))
+                    per_gene_scores.append(f"{p}:{round(s,2)}")
 
             else:
-                scores = scores+gene+'|'
+                per_gene_scores.append(gene)
                 l, g = np.argmin(loss), np.argmax(gain),
-                scores += "%s:%s|%s:%s|" % (g-d, round(gain[g],2), l-d, round(loss[l],2))
+                gain_str = f"{g-d}:{round(gain[g],2)}"
+                loss_str = f"{l-d}:{round(loss[l],2)}"
+                per_gene_scores += [gain_str, loss_str]
 
-            scores += warnings
+            per_gene_scores.append(warnings)
+            scores_list.append('|'.join(per_gene_scores))
 
-    return scores.strip('|')
+    return ','.join(scores_list)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -237,7 +243,7 @@ def main():
         variants = vcf.Reader(filename=variants)
         variants.infos["Pangolin"] = vcf.parser._Info(
             "Pangolin",'.',"String","Pangolin splice scores. "
-            "Format: gene|pos:score_change|pos:score_change|...",'.','.')
+            "Format: gene|pos:score_change|pos:score_change|warnings,...",'.','.')
         fout = vcf.Writer(open(args.output_file+".vcf", 'w'), variants)
 
         for i, variant in enumerate(variants):
